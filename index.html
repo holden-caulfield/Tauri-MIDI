@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri MIDI</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <main class="contenedor">
+      <h1>Tauri MIDI</h1>
+      <p class="subtitulo">
+        Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI
+        que pasan por la aplicación.
+      </p>
+
+      <section class="panel-conexion">
+        <div class="campo">
+          <label for="select-puerto-entrada">Puerto de entrada</label>
+          <select id="select-puerto-entrada"></select>
+        </div>
+
+        <div class="campo">
+          <label for="select-puerto-salida">Puerto de salida</label>
+          <select id="select-puerto-salida"></select>
+        </div>
+
+        <div class="fila-botones">
+          <button id="boton-actualizar-puertos" type="button">
+            Actualizar puertos
+          </button>
+          <button id="boton-conectar" type="button">Conectar</button>
+          <button id="boton-desconectar" type="button" disabled>
+            Desconectar
+          </button>
+        </div>
+
+        <p id="texto-estado" class="estado estado-desconectado">
+          Desconectado
+        </p>
+      </section>
+
+      <section class="panel-log">
+        <div class="encabezado-log">
+          <h2>Mensajes MIDI</h2>
+          <button id="boton-limpiar-log" type="button">Limpiar</button>
+        </div>
+        <div id="lista-mensajes" class="lista-mensajes"></div>
+      </section>
+    </main>
+  </body>
+</html>
