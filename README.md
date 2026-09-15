@@ -33,10 +33,10 @@ sistema operativo, y un frontend web embebido que corre en un WebView nativo.
 
 ```
 ┌─────────────────────────┐        eventos ("mensaje-midi")        ┌──────────────────────────┐
-│   Frontend (WebView)    │  ───────────────────────────────────►  │   Backend (Rust / Tauri)  │
-│  src/main.ts, index.html│                                         │      src-tauri/src/       │
-│                          │  ◄───────────────────────────────────  │                            │
-└─────────────────────────┘        comandos (invoke)                └──────────────────────────┘
+│   Frontend (WebView)    │  ───────────────────────────────────►  │   Backend (Rust / Tauri) │
+│  src/main.ts, index.html│                                        │      src-tauri/src/      │
+│                         │  ◄───────────────────────────────────  │                          │
+└─────────────────────────┘        comandos (invoke)               └──────────────────────────┘
                                                                               │
                                                                               ▼
                                                                      midir (CoreMIDI/ALSA/WinMM)
