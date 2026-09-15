@@ -16,6 +16,14 @@ La conversación con la persona usuaria puede ser en castellano o en inglés
 indistintamente — esta regla es sobre el material del proyecto, no sobre el
 chat.
 
+## Flujo de git
+
+Todo cambio se hace en una rama local nueva, nunca directamente sobre
+`main`. Al terminar la tarea, se sube esa rama y se abre un PR contra
+`main`; una vez mergeado, hay que volver a `main`, actualizar con
+`git pull` y borrar la rama local (y la remota, si no se borró sola al
+mergear).
+
 ## Arquitectura y convenciones técnicas
 
 - **Backend**: Rust, en `src-tauri/`. La lógica de MIDI usa la librería
