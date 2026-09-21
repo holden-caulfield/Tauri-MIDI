@@ -41,8 +41,11 @@ export async function inicializarConexion() {
   const botonDesconectar = document.querySelector<HTMLButtonElement>(
     "#boton-desconectar",
   )!;
-  const textoEstado = document.querySelector<HTMLParagraphElement>(
-    "#texto-estado",
+  const indicadorEstado = document.querySelector<HTMLParagraphElement>(
+    "#indicador-estado",
+  )!;
+  const mensajeConexion = document.querySelector<HTMLParagraphElement>(
+    "#mensaje-conexion",
   )!;
 
   async function actualizarListaDePuertos() {
@@ -56,9 +59,9 @@ export async function inicializarConexion() {
   }
 
   function establecerEstadoConectado(conectado: boolean) {
-    textoEstado.textContent = conectado ? "Conectado" : "Desconectado";
-    textoEstado.classList.toggle("estado-conectado", conectado);
-    textoEstado.classList.toggle("estado-desconectado", !conectado);
+    indicadorEstado.textContent = conectado ? "Conectado" : "Desconectado";
+    indicadorEstado.classList.toggle("estado-conectado", conectado);
+    indicadorEstado.classList.toggle("estado-desconectado", !conectado);
 
     botonConectar.disabled = conectado;
     botonDesconectar.disabled = !conectado;
@@ -68,11 +71,14 @@ export async function inicializarConexion() {
   }
 
   async function conectar() {
+    mensajeConexion.textContent = "";
+
     const puertoEntrada = selectPuertoEntrada.value;
     const puertoSalida = selectPuertoSalida.value;
 
     if (!puertoEntrada || !puertoSalida) {
-      textoEstado.textContent = "Elegí un puerto de entrada y uno de salida";
+      mensajeConexion.textContent =
+        "Elegí un puerto de entrada y uno de salida";
       return;
     }
 
@@ -80,11 +86,13 @@ export async function inicializarConexion() {
       await invoke("conectar", { puertoEntrada, puertoSalida });
       establecerEstadoConectado(true);
     } catch (error) {
-      textoEstado.textContent = `Error al conectar: ${error}`;
+      mensajeConexion.textContent = `Error al conectar: ${error}`;
     }
   }
 
   async function desconectar() {
+    mensajeConexion.textContent = "";
+
     try {
       await invoke("desconectar");
     } finally {

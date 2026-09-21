@@ -20,30 +20,59 @@
 
 body {
   margin: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .contenedor {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   max-width: 900px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 3rem;
+  padding: 1.25rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+.encabezado {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
 h1 {
-  text-align: center;
-  margin-bottom: 0;
+  margin: 0;
+  font-size: 1.6rem;
 }
 
 .subtitulo {
-  text-align: center;
-  margin-top: 0;
+  flex-basis: 100%;
+  margin: 0;
   opacity: 0.75;
 }
 
-.panel-conexion,
-.panel-log {
+.mensaje-conexion {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 600;
+  color: #b3261e;
+}
+
+.mensaje-conexion:empty {
+  display: none;
+}
+
+.panel {
   border: 1px solid rgba(127, 127, 127, 0.25);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
@@ -97,6 +126,35 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.barra-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.4rem 1rem;
+  border-top: 1px solid rgba(127, 127, 127, 0.25);
+  background-color: rgba(127, 127, 127, 0.08);
+}
+
+.barra-tabs button {
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  padding: 0.5em 1.4em;
+  font-weight: 600;
+  opacity: 0.65;
+}
+
+.barra-tabs button[aria-selected="true"] {
+  background-color: rgba(127, 127, 127, 0.2);
+  opacity: 1;
+}
+
+.barra-tabs button:focus-visible {
+  outline: 2px solid #396cd8;
+  outline-offset: 2px;
+  opacity: 1;
+}
+
 .fila-botones {
   display: flex;
   gap: 0.6rem;
@@ -104,7 +162,6 @@ button:disabled {
 }
 
 .estado {
-  flex-basis: 100%;
   margin: 0;
   font-weight: 600;
 }
@@ -164,6 +221,10 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
+[hidden] {
+  display: none;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -182,5 +243,13 @@ button:disabled {
 
   .lista-mensajes {
     background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .barra-tabs button {
+    background-color: transparent;
+  }
+
+  .barra-tabs button[aria-selected="true"] {
+    background-color: rgba(255, 255, 255, 0.14);
   }
 }
