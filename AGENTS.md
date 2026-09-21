@@ -32,23 +32,42 @@ mergear).
   además está detrás de un `Arc` porque el callback de la conexión de
   entrada —que corre en su propio hilo— también necesita escribir en ella
   para hacer pass-through).
-- **Frontend**: TypeScript sin framework (vanilla), con Vite. Se comunica
-  con el backend mediante comandos (`invoke`) y eventos (`listen`) de la
-  API de Tauri. No agregar un framework (React, Vue, etc.) sin que la
-  persona usuaria lo pida explícitamente.
-- **Organización del frontend**: un módulo por área de la interfaz
-  (`conexion.ts`, `log.ts`, `tabs.ts`), cada uno con una función
-  `inicializar<X>()` que busca sus propios nodos y engancha sus listeners;
-  `main.ts` solo los llama desde `DOMContentLoaded`. Un módulo es dueño de un
-  comportamiento, no de una región de la pantalla: `conexion.ts` maneja
-  también el indicador de estado, que vive en el encabezado.
-- **Tabs**: la barra está al pie y va última en `index.html`, después de los
-  paneles, para que el recorrido por teclado siga el orden visual. Cada botón
-  apunta con `aria-controls` al `id` de su panel y `tabs.ts` deriva todo de
-  ahí: agregar un tab es agregar un botón y una `<section>`, sin tocar
-  TypeScript. En el encabezado va solo lo que aplica a todos los tabs.
-  Ocultar un panel es ponerle `hidden`, nunca desmontarlo — el log tiene que
-  seguir acumulando mensajes mientras su tab no está a la vista.
+- **Frontend**: TypeScript con Vite y [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
+  para las plantillas. Se comunica con el backend mediante comandos
+  (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar un framework
+  de componentes (React, Vue, Svelte, etc.) sin que la persona usuaria lo
+  pida explícitamente.
+- **Estado de la interfaz**: todo lo que la pantalla muestra vive en
+  `src/estado.ts`. Se modifica solo con `actualizar()`, que avisa a quien se
+  suscribió, y eso vuelve a dibujar la ventana. Ningún módulo guarda estado
+  propio ni lee el estado del DOM: si un dato hace falta para dibujar, va en
+  `Estado`. No agrupamos redibujados a propósito — los cambios vienen de
+  clics, no de mensajes MIDI.
+- **Componentes**: un componente es una función que devuelve una plantilla de
+  `lit-html`. Lee del estado, o recibe lo que necesita por parámetro; no tiene
+  estado interno ni ciclo de vida. Sigue habiendo un módulo por área de la
+  interfaz (`conexion.ts`, `log.ts`, `tabs.ts`), y si además tiene que
+  escuchar al backend exporta un `inicializar<X>()` aparte del componente. Un
+  módulo es dueño de un comportamiento, no de una región de la pantalla:
+  `conexion.ts` exporta también el indicador de estado, que el componente raíz
+  ubica en el encabezado.
+- **`main.ts` es el componente raíz**: arma la ventana con los demás adentro y
+  es el único lugar que llama a `render` y a `suscribir`. `index.html` quedó
+  reducido a `<div id="app">`; el marcado vive en los componentes.
+- **Paneles y tabs**: la lista `PANELES` de `main.ts` es la única fuente; de
+  ahí salen la barra, las `<section>` de los paneles y los atributos ARIA que
+  los enlazan (`id`, `aria-controls`, `aria-labelledby`, `aria-selected`).
+  Agregar un panel es agregar una entrada a esa lista y el módulo con su
+  componente. La barra va última en la raíz, después de los paneles, para que
+  el recorrido por teclado siga el orden visual. En el encabezado va solo lo
+  que aplica a todos los tabs. Ocultar un panel es `?hidden`, **nunca**
+  renderizado condicional (`${activo ? panel() : nothing}`): desmontarlo le
+  borraría al log los mensajes acumulados, que tiene que seguir juntando
+  mientras su tab no está a la vista.
+- **Excepción del log**: las filas de mensajes se agregan al DOM a mano, no
+  por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
+  escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
+  filas), y lo hace después del primer dibujado.
 - **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
   `snake_case` del lado de Rust; Tauri los mapea automáticamente a
   `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
