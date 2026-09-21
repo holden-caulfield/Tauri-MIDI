@@ -14,6 +14,7 @@
     "@tauri-apps/plugin-opener": "^2"
   },
   "devDependencies": {
+    "@fission-ai/openspec": "^1.13.1",
     "@tauri-apps/cli": "^2",
 		"vite": "^8.0.16",
     "typescript": "~6.0.3"

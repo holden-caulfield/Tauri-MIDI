@@ -1,21 +1,16 @@
 schema: spec-driven
 
 context: |
-  Idioma: castellano.
-  Todos los artefactos deben escribirse en castellano.
-  Mantener los encabezados estructurales de OpenSpec y las palabras clave SHALL/MUST en inglés.
+  Todo el material escrito de este proyecto va en castellano (ver la sección
+  Idioma de AGENTS.md). En los artefactos de OpenSpec, mantener en inglés
+  únicamente los encabezados estructurales y las palabras clave SHALL/MUST.
 
-# Reglas por artefacto (opcional)
-# Agregar reglas específicas para artefactos puntuales.
-# Ejemplo:
+# Reglas por artefacto (opcional). Ejemplo:
 #   rules:
 #     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+#       - Máximo 500 palabras.
 
 operations:
   archive:
     guidance:
-      - Si el cambio implicó decisiones de arquitectura, convenciones técnicas nuevas, cambios de toolchain o del flujo de verificación, no editar AGENTS.md directamente. Proponer a la persona usuaria un resumen o diff puntual de los cambios sugeridos para AGENTS.md y esperar su aprobación explícita antes de aplicarlos y antes de dar el cambio por archivado.
+      - Si el cambio implicó decisiones de arquitectura, convenciones técnicas nuevas, cambios de toolchain o del flujo de verificación, no editar AGENTS.md directamente - proponer a la persona usuaria el diff sugerido y esperar su aprobación explícita antes de aplicarlo y antes de dar el cambio por archivado.
