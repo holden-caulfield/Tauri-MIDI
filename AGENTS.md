@@ -36,6 +36,19 @@ mergear).
   con el backend mediante comandos (`invoke`) y eventos (`listen`) de la
   API de Tauri. No agregar un framework (React, Vue, etc.) sin que la
   persona usuaria lo pida explícitamente.
+- **Organización del frontend**: un módulo por área de la interfaz
+  (`conexion.ts`, `log.ts`, `tabs.ts`), cada uno con una función
+  `inicializar<X>()` que busca sus propios nodos y engancha sus listeners;
+  `main.ts` solo los llama desde `DOMContentLoaded`. Un módulo es dueño de un
+  comportamiento, no de una región de la pantalla: `conexion.ts` maneja
+  también el indicador de estado, que vive en el encabezado.
+- **Tabs**: la barra está al pie y va última en `index.html`, después de los
+  paneles, para que el recorrido por teclado siga el orden visual. Cada botón
+  apunta con `aria-controls` al `id` de su panel y `tabs.ts` deriva todo de
+  ahí: agregar un tab es agregar un botón y una `<section>`, sin tocar
+  TypeScript. En el encabezado va solo lo que aplica a todos los tabs.
+  Ocultar un panel es ponerle `hidden`, nunca desmontarlo — el log tiene que
+  seguir acumulando mensajes mientras su tab no está a la vista.
 - **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
   `snake_case` del lado de Rust; Tauri los mapea automáticamente a
   `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
@@ -64,8 +77,12 @@ mergear).
   ventana nativa (no es un sitio web): para verlo, hay que ejecutarlo en la
   máquina de la persona usuaria, no alcanza con abrir la URL de Vite en un
   navegador común, ya que ese navegador no tiene el puente de IPC de Tauri
-  (`invoke`/`listen` van a fallar ahí). Sirve igual para revisar visualmente
-  el layout con las herramientas de navegador disponibles.
+  (`invoke`/`listen` van a fallar ahí). Sirve igual para revisar con las
+  herramientas de navegador disponibles el layout, la conmutación de tabs,
+  los atributos ARIA y el orden de tabulación. Lo que no se puede verificar
+  ahí es la activación de controles con el teclado: la inyección de teclas no
+  dispara la activación de un botón nativo, así que Enter y barra
+  espaciadora hay que probarlos en la ventana real.
 - Para probar el flujo de MIDI sin hardware físico, en macOS se puede
   habilitar el **IAC Driver** (Audio MIDI Setup → MIDI Studio) y usarlo como
   puerto de entrada y salida.

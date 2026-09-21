@@ -9,14 +9,29 @@
   </head>
 
   <body>
-    <main class="contenedor">
+    <header class="encabezado">
       <h1>Tauri MIDI</h1>
-      <p class="subtitulo">
-        Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI
-        que pasan por la aplicación.
+      <p
+        id="indicador-estado"
+        class="estado estado-desconectado"
+        aria-live="polite"
+      >
+        Desconectado
       </p>
+    </header>
 
-      <section class="panel-conexion">
+    <main class="contenedor">
+      <section
+        id="panel-conexion"
+        class="panel panel-conexion"
+        role="tabpanel"
+        aria-labelledby="tab-conexion"
+      >
+        <p class="subtitulo">
+          Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI
+          que pasan por la aplicación.
+        </p>
+
         <div class="campo">
           <label for="select-puerto-entrada">Puerto de entrada</label>
           <select id="select-puerto-entrada"></select>
@@ -37,12 +52,15 @@
           </button>
         </div>
 
-        <p id="texto-estado" class="estado estado-desconectado">
-          Desconectado
-        </p>
+        <p id="mensaje-conexion" class="mensaje-conexion"></p>
       </section>
 
-      <section class="panel-log">
+      <section
+        id="panel-log"
+        class="panel panel-log"
+        role="tabpanel"
+        aria-labelledby="tab-log"
+      >
         <div class="encabezado-log">
           <h2>Mensajes MIDI</h2>
           <button id="boton-limpiar-log" type="button">Limpiar</button>
@@ -50,5 +68,19 @@
         <div id="lista-mensajes" class="lista-mensajes"></div>
       </section>
     </main>
+
+    <div class="barra-tabs" role="tablist" aria-label="Secciones">
+      <button
+        id="tab-conexion"
+        type="button"
+        role="tab"
+        aria-controls="panel-conexion"
+      >
+        Conexión
+      </button>
+      <button id="tab-log" type="button" role="tab" aria-controls="panel-log">
+        Log
+      </button>
+    </div>
   </body>
 </html>
