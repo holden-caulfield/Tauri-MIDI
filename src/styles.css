@@ -21,6 +21,10 @@
 body {
   margin: 0;
   height: 100dvh;
+}
+
+#app {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }

@@ -1,4 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
+import { html } from "lit-html";
 
 interface MensajeMidi {
   puerto: string;
@@ -8,6 +9,10 @@ interface MensajeMidi {
 }
 
 const MAXIMO_MENSAJES_EN_PANTALLA = 500;
+
+// Las filas no se dibujan con una plantilla: redibujar la lista entera con
+// cada mensaje MIDI no escala, así que se agregan a mano al contenedor.
+let listaMensajes: HTMLDivElement;
 
 function formatearBytes(datos: number[]): string {
   return datos
@@ -42,17 +47,22 @@ function crearFilaMensaje(mensaje: MensajeMidi): HTMLDivElement {
   return fila;
 }
 
-export async function inicializarLog() {
-  const listaMensajes = document.querySelector<HTMLDivElement>(
-    "#lista-mensajes",
-  )!;
-  const botonLimpiar = document.querySelector<HTMLButtonElement>(
-    "#boton-limpiar-log",
-  )!;
+function limpiar() {
+  listaMensajes.innerHTML = "";
+}
 
-  botonLimpiar.addEventListener("click", () => {
-    listaMensajes.innerHTML = "";
-  });
+export function panelLog() {
+  return html`
+    <div class="encabezado-log">
+      <h2>Mensajes MIDI</h2>
+      <button type="button" @click=${limpiar}>Limpiar</button>
+    </div>
+    <div id="lista-mensajes" class="lista-mensajes"></div>
+  `;
+}
+
+export async function inicializarLog() {
+  listaMensajes = document.querySelector<HTMLDivElement>("#lista-mensajes")!;
 
   await listen<MensajeMidi>("mensaje-midi", (evento) => {
     listaMensajes.prepend(crearFilaMensaje(evento.payload));

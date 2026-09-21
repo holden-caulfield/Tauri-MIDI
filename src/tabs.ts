@@ -1,45 +1,30 @@
-function buscarPanel(tab: HTMLButtonElement): HTMLElement {
-  const nombreTab = tab.textContent?.trim();
-  const idPanel = tab.getAttribute("aria-controls");
+import { html, type TemplateResult } from "lit-html";
 
-  if (!idPanel) {
-    throw new Error(`El tab "${nombreTab}" no declara aria-controls`);
-  }
+import { actualizar } from "./estado";
 
-  const panel = document.querySelector<HTMLElement>(`#${idPanel}`);
-
-  if (!panel) {
-    throw new Error(
-      `El tab "${nombreTab}" apunta a "#${idPanel}", que no existe`,
-    );
-  }
-
-  return panel;
+export interface Panel {
+  id: string;
+  titulo: string;
+  contenido: () => TemplateResult;
 }
 
-export function inicializarTabs() {
-  const barra = document.querySelector<HTMLElement>('[role="tablist"]')!;
-  const tabs = Array.from(
-    barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
-  );
-
-  if (tabs.length === 0) {
-    throw new Error("La barra de tabs no tiene ningún tab");
-  }
-
-  const paneles = tabs.map(buscarPanel);
-
-  function activarTab(indiceActivo: number) {
-    tabs.forEach((tab, indice) => {
-      const activo = indice === indiceActivo;
-      tab.setAttribute("aria-selected", String(activo));
-      paneles[indice].hidden = !activo;
-    });
-  }
-
-  tabs.forEach((tab, indice) => {
-    tab.addEventListener("click", () => activarTab(indice));
-  });
-
-  activarTab(0);
+export function barraDeTabs(paneles: Panel[], activo: string) {
+  return html`
+    <div class="barra-tabs" role="tablist" aria-label="Secciones">
+      ${paneles.map(
+        (panel) => html`
+          <button
+            id="tab-${panel.id}"
+            type="button"
+            role="tab"
+            aria-controls="panel-${panel.id}"
+            aria-selected=${panel.id === activo}
+            @click=${() => actualizar({ panelActivo: panel.id })}
+          >
+            ${panel.titulo}
+          </button>
+        `,
+      )}
+    </div>
+  `;
 }
