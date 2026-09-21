@@ -81,6 +81,62 @@ mergear).
   diseñar el futuro editor visual de flujos de trabajo hasta que se pida
   explícitamente).
 
+## OpenSpec
+
+El proyecto tiene configurado [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+(`openspec/`) para features grandes que conviene planificar con proposal,
+specs, diseño y tareas antes de implementar. Es una herramienta opcional: se
+usa solo cuando la persona usuaria lo pide explícitamente (por ejemplo con
+`/opsx:propose`), nunca por iniciativa propia del agente — el resto del trabajo
+sigue las reglas de este archivo sin pasar por OpenSpec.
+
+Es una excepción consciente a la regla de no agregar configuración para
+necesidades que todavía no llegaron: se acepta porque el costo es chico (un
+archivo de configuración y seis comandos de pocas líneas) y no toca el código
+de la app.
+
+El CLI es `@fission-ai/openspec`, declarado en `devDependencies` — ojo que el
+paquete `openspec` a secas es otro, abandonado y sin ejecutable. Se usa con
+`npx openspec`, no hace falta instalarlo aparte.
+
+### Flujo
+
+El CLI se conduce solo: cada comando indica cuál es el paso siguiente, y
+`openspec instructions` devuelve, para cada artefacto, qué escribir y en qué
+archivo. Por eso no hay instrucciones de OpenSpec copiadas al repositorio: la
+fuente de verdad es el CLI, y esto es todo lo que hace falta para usarlo desde
+cualquier herramienta, con o sin Claude Code.
+
+```bash
+npx openspec new change <nombre>           # crear el cambio
+npx openspec status --change <nombre>      # qué falta y cuál es el próximo paso
+npx openspec instructions <artefacto> --change <nombre>  # qué escribir y dónde
+npx openspec instructions apply --change <nombre>        # cómo implementarlo
+npx openspec validate <nombre>             # validar
+npx openspec archive <nombre>              # archivar y actualizar las specs
+```
+
+En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
+mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,
+`/opsx:sync`, `/opsx:update`). No son output de la herramienta y `openspec
+update` no los toca: si cambia el CLI, hay que actualizarlos a mano.
+
+`openspec/config.yaml` es configuración propia del proyecto y va en castellano:
+fija el idioma de los artefactos generados y agrega guía para el archivado.
+
+### Devolver el conocimiento a este archivo
+
+Cuando un cambio hecho con OpenSpec implica decisiones de arquitectura,
+convenciones técnicas nuevas, cambios de toolchain o del flujo de verificación,
+ese conocimiento tiene que volver a este archivo antes de archivar el cambio;
+si no, queda enterrado en `openspec/changes/archive/`. La forma es proponerle
+el diff a la persona usuaria y esperar aprobación explícita — nunca editar este
+archivo por iniciativa propia.
+
+`operations.archive.guidance` en `openspec/config.yaml` repite esa regla para
+que aparezca al momento de archivar, pero el CLI la entrega marcada como
+*advisory*: la regla que manda es esta, no la del archivo de configuración.
+
 ## Roadmap (contexto, no una tarea pendiente)
 
 El objetivo a mediano plazo es agregar componentes visuales que le permitan

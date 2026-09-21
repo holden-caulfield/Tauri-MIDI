@@ -93,13 +93,46 @@ cualquier app o controlador virtual que hable con esos puertos:
 ├── src/                    # Frontend (TypeScript, CSS)
 │   ├── main.ts
 │   └── styles.css
-└── src-tauri/              # Backend (Rust)
-    ├── src/
-    │   ├── lib.rs          # Lógica de MIDI y comandos de Tauri
-    │   └── main.rs
-    ├── Cargo.toml
-    └── tauri.conf.json     # Configuración de la app (ventana, bundle, etc.)
+├── src-tauri/              # Backend (Rust)
+│   ├── src/
+│   │   ├── lib.rs          # Lógica de MIDI y comandos de Tauri
+│   │   └── main.rs
+│   ├── Cargo.toml
+│   └── tauri.conf.json     # Configuración de la app (ventana, bundle, etc.)
+└── openspec/               # Planificación de cambios grandes (opcional)
+    ├── changes/            # Cambios en curso y archivados
+    └── specs/              # Specs de las capacidades ya implementadas
 ```
+
+## Planificar un cambio grande (opcional)
+
+El repo tiene configurado [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+para planificar features grandes antes de escribir código: genera la propuesta,
+las specs, el diseño y la lista de tareas en `openspec/changes/<nombre>/`. Es
+opcional y la mayoría de los cambios no lo necesitan — para un arreglo puntual
+o una feature chica, trabajá como siempre. No hace falta instalar nada: el CLI
+viene en las devDependencies del proyecto.
+
+Si usás **Claude Code**, arrancá con el comando:
+
+```
+/opsx:propose <descripción del cambio a implementar>
+```
+
+Con **cualquier otra herramienta** (o a mano), el mismo flujo se conduce desde
+el CLI, que va indicando el paso siguiente:
+
+```bash
+npx openspec new change <nombre-del-cambio>
+npx openspec status --change <nombre-del-cambio>
+```
+
+`status` dice qué artefacto falta y qué comando sigue; `npx openspec
+instructions <artefacto> --change <nombre-del-cambio>` devuelve qué escribir y
+en qué archivo. Al terminar, `npx openspec archive <nombre-del-cambio>` archiva
+el cambio y actualiza las specs.
+
+El detalle del flujo y las reglas para agentes están en [AGENTS.md](AGENTS.md).
 
 ## Convenciones del proyecto
 
