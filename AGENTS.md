@@ -102,6 +102,14 @@ mergear).
   ahí es la activación de controles con el teclado: la inyección de teclas no
   dispara la activación de un botón nativo, así que Enter y barra
   espaciadora hay que probarlos en la ventana real.
+- Como la interfaz se dibuja desde `src/estado.ts`, en el navegador se puede
+  manejar el estado a mano desde la consola
+  (`const m = await import('/src/estado.ts'); m.actualizar({ conectado: true })`)
+  y revisar cómo responde la pantalla sin el puente de IPC ni hardware MIDI.
+  Sirve para los estados de los controles, que la elección de puerto sobreviva
+  a un redibujado y que las filas del log no se pierdan. Lo que sigue
+  necesitando la ventana real es la activación con teclado y el flujo MIDI
+  completo.
 - Para probar el flujo de MIDI sin hardware físico, en macOS se puede
   habilitar el **IAC Driver** (Audio MIDI Setup → MIDI Studio) y usarlo como
   puerto de entrada y salida.
