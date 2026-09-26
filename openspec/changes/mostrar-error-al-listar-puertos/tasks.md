@@ -31,5 +31,5 @@ verifica").
       se listan los puertos como siempre, sin ningún mensaje
 - [x] 3.2 Correr la verificación de AGENTS.md: `cargo check` desde
       `src-tauri/` y `npx tsc --noEmit` desde la raíz
-- [ ] 3.3 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
+- [x] 3.3 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
       creado
