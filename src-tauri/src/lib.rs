@@ -1,17 +1,23 @@
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Estado compartido de la aplicación: mantiene vivas las conexiones MIDI
 /// mientras dure la sesión. La conexión de salida se comparte mediante un
 /// `Arc` porque también la necesita el callback de la conexión de entrada,
 /// que reenvía directo los mensajes de reloj sin pasarlos por el workflow.
+///
+/// `numero_de_conexion` cambia cada vez que se cierran las conexiones, y su
+/// lock se toma durante todo el cierre y la apertura: así el hilo que vigila
+/// una conexión sabe si sigue siendo la suya antes de cerrarla.
 struct EstadoMidi {
     conexion_entrada: Mutex<Option<MidiInputConnection<()>>>,
     conexion_salida: Arc<Mutex<Option<MidiOutputConnection>>>,
+    numero_de_conexion: Mutex<u64>,
 }
 
 impl Default for EstadoMidi {
@@ -19,6 +25,7 @@ impl Default for EstadoMidi {
         Self {
             conexion_entrada: Mutex::new(None),
             conexion_salida: Arc::new(Mutex::new(None)),
+            numero_de_conexion: Mutex::new(0),
         }
     }
 }
@@ -119,7 +126,12 @@ fn listar_puertos_salida() -> Result<Vec<String>, String> {
         .collect())
 }
 
-fn cerrar_conexiones(estado: &EstadoMidi) {
+const INTERVALO_DE_VIGILANCIA: Duration = Duration::from_secs(1);
+
+/// Recibe el lock de `numero_de_conexion` ya tomado, para que quien llama
+/// pueda cerrar y abrir sin que un vigilante se meta en el medio.
+fn cerrar_conexiones(estado: &EstadoMidi, numero_de_conexion: &mut u64) {
+    *numero_de_conexion += 1;
     if let Some(conexion) = estado.conexion_entrada.lock().unwrap().take() {
         conexion.close();
     }
@@ -135,14 +147,67 @@ fn conectar(
     puerto_entrada: String,
     puerto_salida: String,
 ) -> Result<(), String> {
-    cerrar_conexiones(&estado);
+    let mut numero_de_conexion = estado.numero_de_conexion.lock().unwrap();
+    cerrar_conexiones(&estado, &mut numero_de_conexion);
 
     // La salida se abre y se guarda antes que la entrada, porque el callback
     // de la entrada la necesita para reenviar el reloj. Si algo falla después,
     // hay que cerrarla: un intento fallido no puede dejar ningún puerto abierto.
-    abrir_conexiones(app, &estado, puerto_entrada, puerto_salida).inspect_err(|_| {
-        cerrar_conexiones(&estado);
-    })
+    abrir_conexiones(app.clone(), &estado, puerto_entrada.clone(), puerto_salida.clone())
+        .inspect_err(|_| cerrar_conexiones(&estado, &mut numero_de_conexion))?;
+
+    vigilar_conexion(app, *numero_de_conexion, puerto_entrada, puerto_salida);
+    Ok(())
+}
+
+/// `midir` no avisa cuando un puerto desaparece: la conexión simplemente deja
+/// de recibir. Por eso se revisa periódicamente que los dos puertos sigan en
+/// la lista del sistema, y si falta alguno se cierra todo y se avisa.
+fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: String, puerto_salida: String) {
+    thread::spawn(move || {
+        let (Ok(midi_in), Ok(midi_out)) = (
+            MidiInput::new("tauri-midi-vigilancia-entrada"),
+            MidiOutput::new("tauri-midi-vigilancia-salida"),
+        ) else {
+            return;
+        };
+
+        loop {
+            thread::sleep(INTERVALO_DE_VIGILANCIA);
+
+            let falta_entrada = !midi_in
+                .ports()
+                .iter()
+                .any(|puerto| midi_in.port_name(puerto).is_ok_and(|nombre| nombre == puerto_entrada));
+            let falta_salida = !midi_out
+                .ports()
+                .iter()
+                .any(|puerto| midi_out.port_name(puerto).is_ok_and(|nombre| nombre == puerto_salida));
+
+            let estado = app.state::<EstadoMidi>();
+            let mut numero_de_conexion = estado.numero_de_conexion.lock().unwrap();
+            if *numero_de_conexion != numero {
+                return;
+            }
+
+            let mensaje = match (falta_entrada, falta_salida) {
+                (false, false) => continue,
+                (true, false) => format!(
+                    "Se perdió la conexión con el puerto de entrada '{puerto_entrada}'"
+                ),
+                (false, true) => format!(
+                    "Se perdió la conexión con el puerto de salida '{puerto_salida}'"
+                ),
+                (true, true) => format!(
+                    "Se perdió la conexión con el puerto de entrada '{puerto_entrada}' y el de salida '{puerto_salida}'"
+                ),
+            };
+
+            cerrar_conexiones(&estado, &mut numero_de_conexion);
+            let _ = app.emit("conexion-perdida", mensaje);
+            return;
+        }
+    });
 }
 
 fn abrir_conexiones(
@@ -220,7 +285,8 @@ fn abrir_conexiones(
 
 #[tauri::command]
 fn desconectar(estado: State<EstadoMidi>) {
-    cerrar_conexiones(&estado);
+    let mut numero_de_conexion = estado.numero_de_conexion.lock().unwrap();
+    cerrar_conexiones(&estado, &mut numero_de_conexion);
 }
 
 // Sincrónico a propósito: Tauri corre los comandos sincrónicos en el hilo
