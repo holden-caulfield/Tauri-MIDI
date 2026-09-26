@@ -52,5 +52,5 @@ herramienta que mande bytes arbitrarios a un puerto.
       cuáles quiere convertir en cambios nuevos — elegidos: 1 (conexión a
       medias), 2 (el puerto desaparece con la conexión activa) y 3 (falla al
       listar puertos)
-- [ ] 3.3 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
+- [x] 3.3 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
       creado
