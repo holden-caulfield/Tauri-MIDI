@@ -130,6 +130,13 @@ button:disabled {
   cursor: not-allowed;
 }
 
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #396cd8;
+  outline-offset: 2px;
+}
+
 .barra-tabs {
   display: flex;
   justify-content: center;
@@ -225,6 +232,112 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
+.panel-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.barra-herramientas {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.barra-herramientas button,
+.caja {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ayuda-workflow {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.area-workflow {
+  display: flex;
+  gap: 0.75rem;
+  min-height: 420px;
+}
+
+.lienzo {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.04);
+  background-image: radial-gradient(rgba(127, 127, 127, 0.35) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.caja {
+  position: relative;
+  box-sizing: border-box;
+  padding: 0.6rem 1.4rem;
+  border: 2px solid rgba(127, 127, 127, 0.5);
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #0f0f0f;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.caja-seleccionada .caja {
+  border-color: #396cd8;
+  box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.3);
+}
+
+/* Rete ubica las conexiones sumando desplazamientos del DOM, sin tener en
+   cuenta `transform`: por eso los conectores se centran con flexbox. */
+.conector-entrada {
+  margin-left: calc(-1.4rem - 20px);
+}
+
+.conector-salida {
+  margin-left: auto;
+  margin-right: calc(-1.4rem - 20px);
+}
+
+.configuracion {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.configuracion h3 {
+  margin: 0;
+}
+
+.configuracion-vacia {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.configuracion .campo {
+  flex: none;
+}
+
+.campo-si-no {
+  flex-direction: row;
+  align-items: center;
+}
+
+input[type="number"] {
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  padding: 0.6em 0.9em;
+  font-size: 1em;
+  font-family: inherit;
+  color: inherit;
+  background-color: #ffffff;
+}
+
 [hidden] {
   display: none;
 }
@@ -247,6 +360,15 @@ button:disabled {
 
   .lista-mensajes {
     background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .lienzo {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  input[type="number"] {
+    color: #ffffff;
+    background-color: #0f0f0f98;
   }
 
   .barra-tabs button {
