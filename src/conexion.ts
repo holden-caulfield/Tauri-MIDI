@@ -9,17 +9,23 @@ function puertoVigente(elegido: string, puertos: string[]): string {
 }
 
 async function actualizarListaDePuertos() {
-  const [puertosEntrada, puertosSalida] = await Promise.all([
-    invoke<string[]>("listar_puertos_entrada"),
-    invoke<string[]>("listar_puertos_salida"),
-  ]);
+  actualizar({ mensajeConexion: "" });
 
-  actualizar({
-    puertosEntrada,
-    puertosSalida,
-    puertoEntradaElegido: puertoVigente(estado.puertoEntradaElegido, puertosEntrada),
-    puertoSalidaElegido: puertoVigente(estado.puertoSalidaElegido, puertosSalida),
-  });
+  try {
+    const [puertosEntrada, puertosSalida] = await Promise.all([
+      invoke<string[]>("listar_puertos_entrada"),
+      invoke<string[]>("listar_puertos_salida"),
+    ]);
+
+    actualizar({
+      puertosEntrada,
+      puertosSalida,
+      puertoEntradaElegido: puertoVigente(estado.puertoEntradaElegido, puertosEntrada),
+      puertoSalidaElegido: puertoVigente(estado.puertoSalidaElegido, puertosSalida),
+    });
+  } catch (error) {
+    actualizar({ mensajeConexion: `No se pudo obtener la lista de puertos: ${error}` });
+  }
 }
 
 async function conectar() {

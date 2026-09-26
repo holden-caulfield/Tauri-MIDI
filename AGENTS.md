@@ -156,6 +156,15 @@ mergear).
   a un redibujado y que las filas del log no se pierdan. Lo que sigue
   necesitando la ventana real es la activación con teclado y el flujo MIDI
   completo.
+- En el navegador, el arranque se corta en el primer `listen` (el de
+  `inicializarLog`), así que los `inicializar<X>()` que vienen después nunca
+  corren. Para probar uno, o para simular respuestas del backend (por ejemplo
+  un comando que falla, un caso que en la aplicación real no se puede
+  provocar), se reemplaza el puente desde la consola y se llama a la función
+  a mano:
+  `window.__TAURI_INTERNALS__ = { transformCallback: () => 1, invoke: async (comando) => { if (comando.startsWith('plugin:event|')) return 1; throw 'fallo simulado'; } }`.
+  Los botones que llaman a `invoke` usan ese reemplazo desde el siguiente
+  clic.
 - Para probar el flujo de MIDI sin hardware físico, en macOS se puede
   habilitar el **IAC Driver** (Audio MIDI Setup → MIDI Studio). Hacen falta
   **dos buses**: uno como entrada de la aplicación y otro como salida. Con uno
