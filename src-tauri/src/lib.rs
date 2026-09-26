@@ -137,6 +137,20 @@ fn conectar(
 ) -> Result<(), String> {
     cerrar_conexiones(&estado);
 
+    // La salida se abre y se guarda antes que la entrada, porque el callback
+    // de la entrada la necesita para reenviar el reloj. Si algo falla después,
+    // hay que cerrarla: un intento fallido no puede dejar ningún puerto abierto.
+    abrir_conexiones(app, &estado, puerto_entrada, puerto_salida).inspect_err(|_| {
+        cerrar_conexiones(&estado);
+    })
+}
+
+fn abrir_conexiones(
+    app: AppHandle,
+    estado: &EstadoMidi,
+    puerto_entrada: String,
+    puerto_salida: String,
+) -> Result<(), String> {
     let midi_out = MidiOutput::new("tauri-midi-salida").map_err(|error| error.to_string())?;
     let puerto_salida_encontrado = midi_out
         .ports()
