@@ -176,7 +176,7 @@
       arrancó. El ajuste del Roadmap sobre "sin necesidad de programar" ya se
       hizo durante la revisión de la propuesta. Aplicarlo solo con su aprobación
       explícita
-- [ ] 8.2 Subir la rama y abrir el PR contra `main`, con una descripción que
+- [x] 8.2 Subir la rama y abrir el PR contra `main`, con una descripción que
       explique que el pass-through pasa a ser el flujo por defecto (borrar el
       Emitir inicial silencia la salida) y los resultados de
       1.3 y 7.3
