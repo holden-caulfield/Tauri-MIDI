@@ -31,12 +31,16 @@ mergear).
   viven en `tauri::State`, protegidas con `Mutex` (la conexión de salida
   además está detrás de un `Arc` porque el callback de la conexión de
   entrada —que corre en su propio hilo— también necesita escribir en ella
-  para hacer pass-through).
+  para reenviar el reloj MIDI). El backend no procesa mensajes: manda cada
+  uno al frontend (evento `mensaje-midi`) y envía a la salida lo que el
+  frontend le pida con el comando `enviar_mensaje`.
 - **Frontend**: TypeScript con Vite y [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
   para las plantillas. Se comunica con el backend mediante comandos
   (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar un framework
   de componentes (React, Vue, Svelte, etc.) sin que la persona usuaria lo
-  pida explícitamente.
+  pida explícitamente. `lit` está instalado solo porque lo pide el plugin de
+  dibujado de Rete (ver Workflow): nuestro código no escribe `LitElement` ni
+  componentes web, sigue usando funciones de `lit-html`.
 - **Estado de la interfaz**: todo lo que la pantalla muestra vive en
   `src/estado.ts`. Se modifica solo con `actualizar()`, que avisa a quien se
   suscribió, y eso vuelve a dibujar la ventana. Ningún módulo guarda estado
@@ -68,13 +72,40 @@ mergear).
   por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
   filas), y lo hace después del primer dibujado.
+- **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
+  - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
+    el trigger y solo sale lo que llega a una caja Emitir. El pass-through ya
+    no es un comportamiento fijo: es el flujo por defecto (trigger → Emitir).
+  - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
+    `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
+    Rete: es la segunda excepción a la regla de `estado.ts`, junto con el log.
+  - `lienzo.ts` es el **único** módulo que importa Rete. Ni los tipos de nodo,
+    ni el ejecutor, ni el panel de configuración dependen de la librería del
+    lienzo, y así tiene que seguir: cambiar de librería es reescribir ese
+    archivo y nada más.
+  - Cada tipo de nodo es un archivo en `src/workflow/nodos/` que se registra
+    en la lista de `catalogo.ts` (el orden de la lista es el de la barra). La
+    guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
+    alcanzando para alguien que recién empieza a programar.
+  - Las cajas del lienzo son plantillas de `lit-html`, no componentes Lit:
+    Rete no las vuelve a dibujar, así que lo que cambie después de creadas
+    (como la selección) se marca desde `lienzo.ts`. Rete ubica las
+    conexiones sin tener en cuenta `transform` de CSS: los conectores no se
+    posicionan con `transform`.
+  - La ventana tiene `"dragDropEnabled": false` en `tauri.conf.json`: sin eso,
+    Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
+    desde la barra) no funciona en la ventana real.
+  - Los íconos son de [Lucide](https://lucide.dev), importados por nombre para
+    que el tree-shaking deje solo los usados.
 - **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
   `snake_case` del lado de Rust; Tauri los mapea automáticamente a
   `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
   ambos lados en vez de forzar un nombre igual en los dos.
 - **Mensajes de reloj MIDI**: por diseño, los mensajes de *Timing Clock*
-  (`0xF8`) se reenvían a la salida pero se excluyen del log/eventos hacia el
-  frontend (ver `es_mensaje_de_reloj` en `src-tauri/src/lib.rs`). Si se
+  (`0xF8`) no pasan por el workflow: el backend los reenvía directo a la
+  salida (el ida y vuelta al frontend les sumaría jitter) y no los manda al
+  frontend, así que tampoco aparecen en el log (ver `es_mensaje_de_reloj` en
+  `src-tauri/src/lib.rs`). Si se
   agregan otros mensajes de alta frecuencia (por ejemplo Active Sensing,
   `0xFE`), evaluar si corresponde el mismo tratamiento — no asumirlo
   automáticamente, confirmarlo con la persona usuaria.
@@ -106,6 +137,12 @@ mergear).
   manejar el estado a mano desde la consola
   (`const m = await import('/src/estado.ts'); m.actualizar({ conectado: true })`)
   y revisar cómo responde la pantalla sin el puente de IPC ni hardware MIDI.
+  Ojo: después de editar archivos con el servidor corriendo, Vite puede servir
+  un módulo con un sufijo `?t=…`, y un `import` sin ese sufijo trae **otra
+  copia** del estado, que la aplicación no ve. Antes de manejar el estado a
+  mano, recargá la página, o importá la URL exacta que figura en
+  `performance.getEntriesByType('resource')`. Si pasa en `tauri dev`,
+  reiniciarlo.
   Sirve para los estados de los controles, que la elección de puerto sobreviva
   a un redibujado y que las filas del log no se pierdan. Lo que sigue
   necesitando la ventana real es la activación con teclado y el flujo MIDI
@@ -121,9 +158,8 @@ mergear).
   oculta, un workaround puntual). Ver los comentarios existentes en
   `src-tauri/src/lib.rs` como referencia de tono y extensión.
 - No introducir abstracciones, frameworks o configuración pensada para
-  necesidades futuras que todavía no llegaron (por ejemplo, no empezar a
-  diseñar el futuro editor visual de flujos de trabajo hasta que se pida
-  explícitamente).
+  necesidades futuras que todavía no llegaron (por ejemplo, no sumar tipos de
+  parámetro o de trigger al workflow hasta que un nodo concreto los necesite).
 
 ## OpenSpec
 
@@ -183,9 +219,11 @@ que aparezca al momento de archivar, pero el CLI la entrega marcada como
 
 ## Roadmap (contexto, no una tarea pendiente)
 
-El objetivo a mediano plazo es agregar componentes visuales que le permitan
-a usuarios semi-técnicos armar sus propios flujos de trabajo manipulando
-mensajes MIDI (filtrar, transformar, remapear), sin necesidad de programar.
-Todavía no arrancó ese trabajo — tenerlo en mente ayuda a no cerrar puertas
-innecesariamente en el diseño actual, pero no es motivo para anticipar esa
-funcionalidad ahora.
+El objetivo es que usuarios semi-técnicos armen sus propios flujos de trabajo
+manipulando mensajes MIDI (filtrar, transformar, remapear). Armar un flujo no requiere
+escribir código, pero un mínimo de programación es aceptable cuando haga falta
+(por ejemplo, para crear un tipo de nodo nuevo): aprender nociones básicas es
+parte de la propuesta, no una barrera a evitar.
+La base ya existe (el tab Workflow, ver Arquitectura): lo que sigue es sumar
+tipos de nodo de a uno, a medida que se pidan, sin anticipar los que todavía
+no hacen falta.

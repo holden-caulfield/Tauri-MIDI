@@ -7,8 +7,8 @@ use tauri::{AppHandle, Emitter, State};
 
 /// Estado compartido de la aplicación: mantiene vivas las conexiones MIDI
 /// mientras dure la sesión. La conexión de salida se comparte mediante un
-/// `Arc` porque también la necesita el callback de la conexión de entrada
-/// para reenviar los mensajes que recibe.
+/// `Arc` porque también la necesita el callback de la conexión de entrada,
+/// que reenvía directo los mensajes de reloj sin pasarlos por el workflow.
 struct EstadoMidi {
     conexion_entrada: Mutex<Option<MidiInputConnection<()>>>,
     conexion_salida: Arc<Mutex<Option<MidiOutputConnection>>>,
@@ -84,8 +84,9 @@ fn describir_mensaje(datos: &[u8]) -> String {
 }
 
 /// Los mensajes de reloj MIDI (Timing Clock) se envían constantemente
-/// (24 por negra) y solo sirven para sincronización; se excluyen del log
-/// para no saturar la pantalla, pero igual se siguen reenviando a la salida.
+/// (24 por negra) y solo sirven para sincronización: se reenvían directo a la
+/// salida, sin pasar por el workflow (el ida y vuelta al frontend les sumaría
+/// jitter), y se excluyen del log para no saturar la pantalla.
 fn es_mensaje_de_reloj(datos: &[u8]) -> bool {
     datos.first() == Some(&0xF8)
 }
@@ -174,15 +175,17 @@ fn conectar(
             &puerto_entrada_encontrado,
             "tauri-midi-conexion-entrada",
             move |_marca_temporal_us, mensaje, _contexto| {
-                if let Ok(mut salida) = conexion_salida_compartida.lock() {
-                    if let Some(conexion) = salida.as_mut() {
-                        let _ = conexion.send(mensaje);
-                    }
-                }
-
                 if es_mensaje_de_reloj(mensaje) {
+                    if let Ok(mut salida) = conexion_salida_compartida.lock() {
+                        if let Some(conexion) = salida.as_mut() {
+                            let _ = conexion.send(mensaje);
+                        }
+                    }
                     return;
                 }
+
+                // El resto va al frontend, que lo pasa por el workflow y
+                // devuelve con `enviar_mensaje` lo que tenga que salir.
 
                 let evento = MensajeMidi {
                     puerto: nombre_puerto_entrada.clone(),
@@ -206,6 +209,17 @@ fn desconectar(estado: State<EstadoMidi>) {
     cerrar_conexiones(&estado);
 }
 
+// Sincrónico a propósito: Tauri corre los comandos sincrónicos en el hilo
+// principal, de a uno, y eso ayuda a que los mensajes salgan en orden.
+#[tauri::command]
+fn enviar_mensaje(estado: State<EstadoMidi>, datos: Vec<u8>) -> Result<(), String> {
+    let mut salida = estado.conexion_salida.lock().map_err(|error| error.to_string())?;
+    let conexion = salida
+        .as_mut()
+        .ok_or_else(|| "No hay una conexión de salida activa".to_string())?;
+    conexion.send(&datos).map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -215,7 +229,8 @@ pub fn run() {
             listar_puertos_entrada,
             listar_puertos_salida,
             conectar,
-            desconectar
+            desconectar,
+            enviar_mensaje
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

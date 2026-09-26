@@ -8,10 +8,14 @@ import {
 import { estado, suscribir } from "./estado";
 import { inicializarLog, panelLog } from "./log";
 import { barraDeTabs, type Panel } from "./tabs";
+import { inicializarWorkflow } from "./workflow/ejecutar";
+import { asegurarLienzo } from "./workflow/lienzo";
+import { panelWorkflow } from "./workflow/panel";
 
 const PANELES: Panel[] = [
   { id: "conexion", titulo: "Conexión", contenido: panelConexion },
   { id: "log", titulo: "Log", contenido: panelLog },
+  { id: "workflow", titulo: "Workflow", contenido: panelWorkflow },
 ];
 
 function ventana() {
@@ -43,11 +47,17 @@ function ventana() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   const raiz = document.querySelector<HTMLElement>("#app")!;
-  const dibujar = () => render(ventana(), raiz);
+  const dibujar = () => {
+    render(ventana(), raiz);
+    // Rete mide las cajas en pantalla: dentro de un panel oculto todo mide
+    // cero, así que el lienzo se monta la primera vez que queda a la vista.
+    if (estado.panelActivo === "workflow") asegurarLienzo();
+  };
 
   suscribir(dibujar);
   dibujar();
 
   await inicializarLog();
+  await inicializarWorkflow();
   await inicializarConexion();
 });

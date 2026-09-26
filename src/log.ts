@@ -1,7 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { html } from "lit-html";
 
-interface MensajeMidi {
+interface EventoMidi {
   puerto: string;
   marca_temporal_ms: number;
   datos: number[];
@@ -27,7 +27,7 @@ function formatearHora(marcaTemporalMs: number): string {
   return `${hora}.${milisegundos}`;
 }
 
-function crearFilaMensaje(mensaje: MensajeMidi): HTMLDivElement {
+function crearFilaMensaje(mensaje: EventoMidi): HTMLDivElement {
   const fila = document.createElement("div");
   fila.className = "fila-mensaje";
 
@@ -64,7 +64,7 @@ export function panelLog() {
 export async function inicializarLog() {
   listaMensajes = document.querySelector<HTMLDivElement>("#lista-mensajes")!;
 
-  await listen<MensajeMidi>("mensaje-midi", (evento) => {
+  await listen<EventoMidi>("mensaje-midi", (evento) => {
     listaMensajes.prepend(crearFilaMensaje(evento.payload));
 
     while (listaMensajes.childElementCount > MAXIMO_MENSAJES_EN_PANTALLA) {
