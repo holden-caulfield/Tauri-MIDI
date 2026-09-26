@@ -34,6 +34,15 @@ mergear).
   para reenviar el reloj MIDI). El backend no procesa mensajes: manda cada
   uno al frontend (evento `mensaje-midi`) y envía a la salida lo que el
   frontend le pida con el comando `enviar_mensaje`.
+  `midir` no avisa cuando un puerto desaparece, así que cada conexión
+  exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
+  puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
+  emite `conexion-perdida` con el mensaje a mostrar. Para que un vigilante
+  viejo no cierre una conexión nueva, `EstadoMidi` lleva un
+  `numero_de_conexion` que `cerrar_conexiones` incrementa. Su lock se toma
+  durante todo el cierre y la apertura (en `conectar`, `desconectar` y el
+  vigilante), y por eso `cerrar_conexiones` lo recibe ya tomado: cualquier
+  camino nuevo que cierre o abra conexiones tiene que tomarlo igual.
 - **Frontend**: TypeScript con Vite y [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
   para las plantillas. Se comunica con el backend mediante comandos
   (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar un framework
