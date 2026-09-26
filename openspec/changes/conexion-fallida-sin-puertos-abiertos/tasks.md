@@ -30,5 +30,5 @@ inspector de la ventana, correr
       defecto y reenvía el reloj; desconectar y reconectar sigue funcionando
 - [x] 3.3 Correr la verificación de AGENTS.md: `cargo check` desde
       `src-tauri/` y `npx tsc --noEmit` desde la raíz
-- [ ] 3.4 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
+- [x] 3.4 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
       creado
