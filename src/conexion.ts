@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { html } from "lit-html";
 
 import { actualizar, estado } from "./estado";
@@ -138,5 +139,9 @@ export function panelConexion() {
 }
 
 export async function inicializarConexion() {
+  await listen<string>("conexion-perdida", (evento) => {
+    actualizar({ conectado: false, mensajeConexion: evento.payload });
+  });
+
   await actualizarListaDePuertos();
 }
