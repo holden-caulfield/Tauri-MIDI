@@ -202,6 +202,11 @@ npx openspec validate <nombre>             # validar
 npx openspec archive <nombre>              # archivar y actualizar las specs
 ```
 
+El archivado va en la misma rama y el mismo PR que la implementación, como
+último commit, una vez que la persona usuaria revisó el código. No se abre un
+PR aparte solo para archivar. Si el archivado trae cambios a este archivo (ver
+"Devolver el conocimiento a este archivo"), van en ese mismo commit.
+
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,
 `/opsx:sync`, `/opsx:update`). No son output de la herramienta y `openspec
